@@ -114,7 +114,7 @@ const client = new MongoClient(uri, {
 
       const updatedTask = { id, title, description };
 
-      io.emit("task_updated", updatedTask);
+      io.emit("task_updated_title_description", updatedTask);
       res.send({ message: "Task status updated", updatedTask });
     });
 
@@ -136,7 +136,7 @@ const client = new MongoClient(uri, {
       );
 
       const updatedTask = { id, status };
-      io.emit("task_updated", updatedTask);
+      io.emit("task_updated_status", updatedTask);
       res.send({ message: "Task status updated", updatedTask });
     });
 
