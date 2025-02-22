@@ -1,10 +1,31 @@
 const express = require("express");
 const cors = require("cors");
+const { createServer } = require("http");
+const { Server } = require("socket.io");
 const rootHtml = require("./rootHtml");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+
 const port = process.env.PORT || 55555;
 const app = express();
+const httpServer = createServer(app);
+
+// configure webSocket
+const io = new Server(httpServer, {
+  cors: {
+    origin: ["http://localhost:5173", "https://taskeep-task.web.app"],
+    methods: ["GET", "POST"],
+  },
+});
+
+// connect the socket
+io.on("connection", (socket) => {
+  console.log(`Client connected: ${socket.id}`);
+
+  socket.on("disconnect", () => {
+    console.log(`Client disconnected: ${socket.id}`);
+  });
+});
 
 // middlewares
 app.use(
@@ -66,10 +87,11 @@ const client = new MongoClient(uri, {
 
       const result = await tasksCollection.insertOne(doc);
 
+      doc._id = result.insertedId;
+
       if (result.acknowledged) {
-        return res
-          .status(201)
-          .send({ message: "Task created", _id: result.insertedId });
+        io.emit("task_created", doc);
+        return res.status(201).send({ message: "Task created", doc });
       }
     });
 
@@ -91,6 +113,8 @@ const client = new MongoClient(uri, {
       );
 
       const updatedTask = { id, title, description };
+
+      io.emit("task_updated", updatedTask);
       res.send({ message: "Task status updated", updatedTask });
     });
 
@@ -98,6 +122,7 @@ const client = new MongoClient(uri, {
       const { id } = req.params;
 
       await tasksCollection.deleteOne({ _id: new ObjectId(id) });
+      io.emit("task_deleted", id);
       res.send({ message: "Task status updated", id });
     });
 
@@ -111,6 +136,7 @@ const client = new MongoClient(uri, {
       );
 
       const updatedTask = { id, status };
+      io.emit("task_updated", updatedTask);
       res.send({ message: "Task status updated", updatedTask });
     });
 
@@ -125,6 +151,6 @@ app.get("/", (_, res) => {
   res.send(rootHtml);
 });
 
-app.listen(port, () => {
+httpServer.listen(port, () => {
   console.log(`the server running port on: ${port}`);
 });
