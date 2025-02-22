@@ -19,7 +19,7 @@ async function connectDB() {
     });
 
     // connect with MongoDB
-    // await client.connect();
+    await client.connect();
     db = client.db(process.env.DB_NAME);
   } catch (error) {
     console.error(`Error: ${error.message}`);
