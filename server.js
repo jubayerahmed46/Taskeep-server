@@ -35,7 +35,6 @@ app.use(express.json());
 
 const uri = process.env.MONGOD_CONNECT_URI;
 // const uri = process.env.LOCAL_URI;
-console.log(process.env.MONGOD_CONNECT_URI);
 
 const client = new MongoClient(uri, {
   serverApi: {
