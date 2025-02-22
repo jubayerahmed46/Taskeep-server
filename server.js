@@ -49,6 +49,17 @@ const client = new MongoClient(uri, {
       res.send(result);
     });
 
+    /**
+     * ----- TASK related APIs -----
+     *
+     * 1. post(/api/tasks): for creating a new task
+     * 2. get(/api/tasks/email): get user all created data via their email
+     * 3. patch(/api/tasks/:id): update task items
+     * 4. delete(/api/tasks/:id): delete task from database
+     * 5. patch(/api/tasks/status/:id): update task status
+     *
+     * */
+
     app.post("/api/tasks", async (req, res) => {
       const doc = req.body;
       doc.timestamp = Date.now();
@@ -71,6 +82,26 @@ const client = new MongoClient(uri, {
     });
 
     app.patch("/api/tasks/:id", async (req, res) => {
+      const { title, description } = req.body;
+      const { id } = req.params;
+
+      await tasksCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { title, description } }
+      );
+
+      const updatedTask = { id, title, description };
+      res.send({ message: "Task status updated", updatedTask });
+    });
+
+    app.delete("/api/tasks/:id", async (req, res) => {
+      const { id } = req.params;
+
+      await tasksCollection.deleteOne({ _id: new ObjectId(id) });
+      res.send({ message: "Task status updated", id });
+    });
+
+    app.patch("/api/tasks/status/:id", async (req, res) => {
       const { status } = req.body;
       const { id } = req.params;
 
@@ -81,13 +112,6 @@ const client = new MongoClient(uri, {
 
       const updatedTask = { id, status };
       res.send({ message: "Task status updated", updatedTask });
-    });
-
-    app.delete("/api/tasks/:id", async (req, res) => {
-      const { id } = req.params;
-
-      await tasksCollection.deleteOne({ _id: new ObjectId(id) });
-      res.send({ message: "Task status updated", id });
     });
 
     // catch server error here
